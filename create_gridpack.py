@@ -16,6 +16,8 @@ parser.add_argument('--Vmu', dest='Vmu', type=float, default = 0.0, help='Vmu co
 parser.add_argument('--Vtau', dest='Vtau', type=float, default = 0.0, help='Vtau coupling')
 parser.add_argument('--alt', dest='alt', default=[], action='append',help="Alternative coupling in format: Ve,Vmu,Vtau")
 parser.add_argument('--dirac', dest='dirac', default=False, action='store_true', help="")
+parser.add_argument('--skipClone', dest='skipClone', default=False, action='store_true', help="")
+parser.add_argument('--writeCardOnly', dest='writeCardOnly', default=False, action='store_true', help="")
 parser.add_argument('--majorana', dest='majorana', default=False, action='store_true', help="")
 parser.add_argument('--branch', dest='branch', default='localx', help="genproduction branch to checkout")
 args = parser.parse_args()
@@ -86,47 +88,48 @@ def create_gridpack(
     except Exception, e:
         pass
         
-    
-    proc = subprocess.Popen([
-        'git',
-        'clone',
-        '-b',
-        branch,
-        '--depth',
-        '1',
-        '-n',
-        'https://github.com/matt-komm/genproductions.git',
-    ],
-        shell = False,
-        cwd = cwdDir
-    )
-    proc.wait()
-    if proc.returncode!=0:
-        raise Exception("Cloning genproductions failed")
-        
-    proc = subprocess.Popen(
-        ['git','config','core.sparsecheckout','true'],
-        cwd = os.path.join(cwdDir,'genproductions'),
-        shell = False,
-    )
-    proc.wait()
-    if proc.returncode!=0:
-        raise Exception("Configure git for sparse checkout failed")
-        
-    fsparseCfg = open(os.path.join(cwdDir,'genproductions','.git','info','sparse-checkout'),'w')
-    fsparseCfg.write('bin/MadGraph5_aMCatNLO\n')
-    fsparseCfg.write('MetaData\n')
-    fsparseCfg.write('Utilities\n')
-    fsparseCfg.close()
-        
-    proc = subprocess.Popen(
-        ['git','read-tree','-vmu','HEAD'],
-        cwd = os.path.join(cwdDir,'genproductions'),
-        shell = False,
-    )
-    proc.wait()
-    if proc.returncode!=0:
-        raise Exception("Running sparse checkout failed")
+    if not args.skipClone: 
+        proc = subprocess.Popen([
+            'git',
+            'clone',
+    #        '-b',
+    #        #branch,
+    #        "master",
+    #        '--depth',
+    #        '1',
+    #        '-n',
+            'https://github.com/cms-sw/genproductions.git',
+        ],
+            shell = False,
+            cwd = cwdDir
+        )
+        proc.wait()
+        if proc.returncode!=0:
+            raise Exception("Cloning genproductions failed")
+            
+        proc = subprocess.Popen(
+            ['git','config','core.sparsecheckout','true'],
+            cwd = os.path.join(cwdDir,'genproductions'),
+            shell = False,
+        )
+        proc.wait()
+        if proc.returncode!=0:
+            raise Exception("Configure git for sparse checkout failed")
+            
+        fsparseCfg = open(os.path.join(cwdDir,'genproductions','.git','info','sparse-checkout'),'w')
+        fsparseCfg.write('bin/MadGraph5_aMCatNLO\n')
+        fsparseCfg.write('MetaData\n')
+        fsparseCfg.write('Utilities\n')
+        fsparseCfg.close()
+            
+        proc = subprocess.Popen(
+            ['git','read-tree','-vmu','HEAD'],
+            cwd = os.path.join(cwdDir,'genproductions'),
+            shell = False,
+        )
+        proc.wait()
+        if proc.returncode!=0:
+            raise Exception("Running sparse checkout failed")
         
     cardDir = cardName+'_cards'
     cardOutput = os.path.join(cwdDir,'genproductions','bin','MadGraph5_aMCatNLO',cardDir)
@@ -216,7 +219,10 @@ def create_gridpack(
     if os.path.exists(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log")):
         shutil.rmtree(os.path.join(scriptPath,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"))
     '''
-    
+
+    if args.writeCardOnly:  
+        print("Write card only, not running jobs for gridpack")
+        return  
     proc = subprocess.Popen(
         [
             "./gridpack_generation.sh",
@@ -224,8 +230,8 @@ def create_gridpack(
             cardDir,
             "local",
             "ALL",
-            "slc7_amd64_gcc630",
-            "CMSSW_9_3_16"
+            #"slc7_amd64_gcc630",
+            #"CMSSW_9_3_16"
         ],
         #stdout = subprocess.STDOUT,
         #stderr = subprocess.STDOUT,
@@ -239,8 +245,8 @@ def create_gridpack(
         raise Exception("Gridpack script failed")
         
     shutil.move(
-        os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName+"_slc7_amd64_gcc630_CMSSW_9_3_16_tarball.tar.xz"),
-        os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
+        os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName+"_slc7_amd64_gcc700_CMSSW_10_6_19_tarball.tar.xz"),
+        #os.path.join(gridpackOutput,cardName+"_tarball.tar.xz")
     )
     shutil.move(
         os.path.join(cwdDir,"genproductions","bin","MadGraph5_aMCatNLO",cardName+".log"),

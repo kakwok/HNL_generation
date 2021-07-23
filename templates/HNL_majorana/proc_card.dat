@@ -2,9 +2,11 @@ import model SM_HeavyN_Gen3Mass_NLO
 define j = g u c d s u~ c~ d~ s~
 define l = ${LEPTONS}
 define w = w+ w-
+define leptons = l vl
 define vl = ${NEUTRINOS}
 define hnl = ${HNL}
 generate p p > w, (w > l hnl) 
-#add process p p > w j, (w > l hnl) 
+add process p p > w j, (w > l hnl )
+add process p p > w j j, (w > l hnl )
 output ${OUTPUT_NAME} -nojpeg
 

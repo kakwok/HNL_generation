@@ -34,7 +34,7 @@ Block mass
    23 9.118760e+01 # MZ 
    25 1.257000e+02 # MH 
   9900012 ${HNL_MASS} # mN1 
-  9900014 5.000000e+02 # mN2 
+  9900014 1.000000e+03 # mN2 
   9900016 1.000000e+03 # mN3 
 ## Dependent parameters, given by model restrictions.
 ## Those values should be edited following the 
